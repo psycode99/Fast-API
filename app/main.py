@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Response, status
 from fastapi.params import Body
 from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
@@ -21,7 +23,20 @@ class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: Optional[int] = None
+
+
+while True:
+
+    try:
+        conn = psycopg2.connect(host='localhost',  database='fastapi', 
+                                user='postgres', password='wordpress',
+                                cursor_factory=RealDictCursor)
+        cur = conn.cursor()
+        print('Database connection was successful!')
+        break
+    except Exception as err:
+        print('Database connection failed')
+        print(f"Error: {err}")
 
 @app.get('/')
 async def root():
@@ -29,19 +44,23 @@ async def root():
 
 @app.get('/posts')
 def get_posts():
-    return {"data":my_posts}
+    cur.execute(""" SELECT * FROM "Post" """)
+    posts = cur.fetchall()
+    return {"data":posts}
 
 @app.post('/posts', status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
-    post_dict = post.model_dump()
-    post_dict['id'] = randrange(0, 1000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+    cur.execute(f""" INSERT INTO "Post" (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
+                 vars=(post.title, post.content, post.published))
+    new_post = cur.fetchone()  
+    conn.commit() 
+    return {"data": new_post}
 
 
 @app.get('/posts/{id}')
 def get_post(id: int):
-    post = get_p(id=id)
+    cur.execute("""  SELECT * FROM "Post" WHERE id=%s """, vars=(str(id),))
+    post = cur.fetchone()
     if not post:
         raise  HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                               detail=f"post with the id of {id} not found")
@@ -52,22 +71,24 @@ def get_post(id: int):
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
-    post = get_p(id=id)
+    cur.execute("""  DELETE FROM "Post" WHERE id=%s RETURNING * """, vars=(str(id),))
+    post = cur.fetchone()
+    
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with the id of {id} not found")
-    my_posts.remove(post)
+    conn.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put('/posts/{id}', status_code=status.HTTP_200_OK)
 def update_post(id: int, post: Post ):
-    post_ = get_p(id=id)
+    cur.execute("""  UPDATE "Post" SET title=%s, content=%s, published=%s WHERE id=%s  RETURNING * """,
+                vars=(post.title, post.content, post.published, id))
+    post_ = cur.fetchone()
     if not post_:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with the id of {id} not found")
     
-    post_["title"] = post.title
-    post_["content"] = post.content
-    post_['rating'] = post.rating
+    conn.commit()
     
     return {"data": post_}
