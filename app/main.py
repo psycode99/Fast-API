@@ -1,23 +1,16 @@
-from random import random, randrange
-from typing import Optional
-from fastapi import FastAPI, HTTPException, Response, status
-from fastapi.params import Body
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from . import models
+from .database import engine, get_db
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
+# creates the tables based on our predefined models in models.py
 
 app = FastAPI()
 
-my_posts = [{'title': 'Beaches in Florida', 'content': 'Check these awesome beaches now!', 'published': True, 'rating': 4, 'id':1},
-             {'title': 'Beaches in California', 'content': 'Check these awesome beaches now!', 'published': True, 'rating': 4, 'id':2},
-               {'title': 'Beaches in Spain', 'content': 'Check these awesome beaches now!', 'published': True, 'rating': 4, 'id':3}]
-
-
-def get_p(id):
-    for p in my_posts:
-        if p['id'] == id:
-            return p
-        
 
 class Post(BaseModel):
     title: str
@@ -41,6 +34,10 @@ while True:
 @app.get('/')
 async def root():
     return {"message":"Hello to my API !"}
+
+@app.get('/sqlalchemy')
+def test(db: Session = Depends(get_db)):
+    return {"data": "success"}
 
 @app.get('/posts')
 def get_posts():
