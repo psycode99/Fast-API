@@ -6,7 +6,7 @@ SQLACHEMY_DATABASE_URL = 'postgresql://postgres:wordpress@localhost/fastapi'
 
 engine = create_engine(SQLACHEMY_DATABASE_URL)
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocmmit=False)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 # sessionLocal seres as a factory for creating new sessions
 
 Base = declarative_base()
