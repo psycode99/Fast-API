@@ -3,13 +3,14 @@ from fastapi import Depends, FastAPI, HTTPException, Response, status
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy import update
-from . import models
+from . import models, utils
 from .database import engine, get_db
 from sqlalchemy.orm import Session
-from .schemas import PostCreate, Post, UserCreate
+from .schemas import PostCreate, Post, UserCreate, UserResp
 
 models.Base.metadata.create_all(bind=engine)
 # creates the tables based on our predefined models in models.py
+
 
 app = FastAPI()
 
@@ -106,8 +107,10 @@ def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db)):
     return to_be_updated_post
 
 
-@app.post('/users', status_code=status.HTTP_201_CREATED)
+@app.post('/users', status_code=status.HTTP_201_CREATED, response_model=UserResp)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    hashed_pwd = utils.hash(user.password)
+    user.password = hashed_pwd
     new_user = models.User(**user.model_dump())
     db.add(new_user)
     db.commit()
