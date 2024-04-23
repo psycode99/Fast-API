@@ -6,7 +6,7 @@ from sqlalchemy import update
 from . import models
 from .database import engine, get_db
 from sqlalchemy.orm import Session
-from .schemas import PostCreate, Post
+from .schemas import PostCreate, Post, UserCreate
 
 models.Base.metadata.create_all(bind=engine)
 # creates the tables based on our predefined models in models.py
@@ -104,3 +104,13 @@ def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db)):
     # conn.commit()
   
     return to_be_updated_post
+
+
+@app.post('/users', status_code=status.HTTP_201_CREATED)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return new_user
