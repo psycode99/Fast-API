@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import update
 
 router = APIRouter(
-    prefix='/posts'
+    prefix='/posts',
+    tags=['Posts']
 )
 
 @router.get('/', response_model=List[Post])
