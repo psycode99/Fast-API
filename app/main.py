@@ -7,6 +7,7 @@ from . import models, utils
 from .database import engine, get_db
 from sqlalchemy.orm import Session
 from .schemas import PostCreate, Post, UserCreate, UserResp
+from .routers import posts, user
 
 models.Base.metadata.create_all(bind=engine)
 # creates the tables based on our predefined models in models.py
@@ -27,104 +28,13 @@ while True:
         print('Database connection failed')
         print(f"Error: {err}")
 
+
+app.include_router(posts.router)
+app.include_router(user.router)
+
 @app.get('/')
 def root():
     return {"message":"Hello to my API !"}
 
 
-@app.get('/posts', response_model=List[Post])
-def get_posts(db: Session = Depends(get_db)):
-    # cur.execute(""" SELECT * FROM "Post" """)
-    # posts = cur.fetchall()
-    posts = db.query(models.Post).all()
-    return posts
 
-@app.post('/posts', status_code=status.HTTP_201_CREATED, response_model=Post)
-def create_posts(post: PostCreate, db: Session = Depends(get_db)):
-    # cur.execute(f""" INSERT INTO "Post" (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
-    #              vars=(post.title, post.content, post.published))
-    # new_post = cur.fetchone()  
-    # conn.commit() 
-
-    new_post = models.Post(**post.model_dump())
-    db.add(new_post)
-    db.commit()
-    db.refresh(new_post)
-    
-    return  new_post
-
-
-@app.get('/posts/{id}', response_model=Post)
-def get_post(id: int, db: Session = Depends(get_db)):
-    # cur.execute("""  SELECT * FROM "Post" WHERE id=%s """, vars=(str(id),))
-    # post = cur.fetchone()
-    post = db.query(models.Post).filter_by(id=id).first()
-    if not post:
-        raise  HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                              detail=f"post with the id of {id} not found")
-    return  post
-
-
-
-
-@app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session =  Depends(get_db)):
-    # cur.execute("""  DELETE FROM "Post" WHERE id=%s RETURNING * """, vars=(str(id),))
-    # post = cur.fetchone()
-    post = db.query(models.Post).filter_by(id=id).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                             detail=f"post with the id of {id} not found")
-    # conn.commit()
-    db.delete(post)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-@app.put('/posts/{id}', status_code=status.HTTP_200_OK, response_model=Post)
-def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db)):
-    # cur.execute("""  UPDATE "Post" SET title=%s, content=%s, published=%s WHERE id=%s  RETURNING * """,
-    #             vars=(post.title, post.content, post.published, id))
-    # post_ = cur.fetchone()
-    to_be_updated_post = db.query(models.Post).filter_by(id=id).first()
-
-    if not to_be_updated_post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                             detail=f"post with the id of {id} not found")
-    
-    # maps columns of the specific post in the database with data 
-    # from our pydantic model 
-    stmt = (
-        update(models.Post).
-        where(models.Post.id == id).
-        values(**post.model_dump())
-        )
-    
-    db.execute(stmt)
-    
-    db.commit()
-    # conn.commit()
-  
-    return to_be_updated_post
-
-
-@app.post('/users', status_code=status.HTTP_201_CREATED, response_model=UserResp)
-def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    hashed_pwd = utils.hash(user.password)
-    user.password = hashed_pwd
-    new_user = models.User(**user.model_dump())
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    return new_user
-
-
-@app.get('/users/{id}', status_code=status.HTTP_200_OK, response_model=UserResp)
-def get_user(id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter_by(id=id).first()
-
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                             detail=f"User with id of {id} not found")
-    
-    return user
