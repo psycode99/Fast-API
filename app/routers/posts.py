@@ -1,5 +1,5 @@
 from fastapi import status, Depends, HTTPException, Response, APIRouter
-from .. import models
+from .. import models, oauth2
 from typing import List
 from ..schemas import Post, PostCreate
 from..database import get_db
@@ -12,19 +12,19 @@ router = APIRouter(
 )
 
 @router.get('/', response_model=List[Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cur.execute(""" SELECT * FROM "Post" """)
     # posts = cur.fetchall()
     posts = db.query(models.Post).all()
     return posts
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=Post)
-def create_posts(post: PostCreate, db: Session = Depends(get_db)):
+def create_posts(post: PostCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cur.execute(f""" INSERT INTO "Post" (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
     #              vars=(post.title, post.content, post.published))
     # new_post = cur.fetchone()  
     # conn.commit() 
-
+    print(user_id)
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -34,7 +34,7 @@ def create_posts(post: PostCreate, db: Session = Depends(get_db)):
 
 
 @router.get('/{id}', response_model=Post)
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cur.execute("""  SELECT * FROM "Post" WHERE id=%s """, vars=(str(id),))
     # post = cur.fetchone()
     post = db.query(models.Post).filter_by(id=id).first()
@@ -47,7 +47,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session =  Depends(get_db)):
+def delete_post(id: int, db: Session =  Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cur.execute("""  DELETE FROM "Post" WHERE id=%s RETURNING * """, vars=(str(id),))
     # post = cur.fetchone()
     post = db.query(models.Post).filter_by(id=id).first()
@@ -60,7 +60,7 @@ def delete_post(id: int, db: Session =  Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.put('/{id}', status_code=status.HTTP_200_OK, response_model=Post)
-def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db)):
+def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cur.execute("""  UPDATE "Post" SET title=%s, content=%s, published=%s WHERE id=%s  RETURNING * """,
     #             vars=(post.title, post.content, post.published, id))
     # post_ = cur.fetchone()
