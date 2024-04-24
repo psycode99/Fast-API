@@ -25,7 +25,7 @@ def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user: 
     # new_post = cur.fetchone()  
     # conn.commit() 
     print(current_user.id)
-    new_post = models.Post(**post.model_dump())
+    new_post = models.Post(owner_id=current_user.id, **post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -55,10 +55,15 @@ def delete_post(id: int, db: Session =  Depends(get_db), current_user: int = Dep
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with the id of {id} not found")
     # conn.commit()
+    if post.owner_id !=  current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                             detail="You have no authority here")
+
     db.delete(post)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+        
 @router.put('/{id}', status_code=status.HTTP_200_OK, response_model=Post)
 def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cur.execute("""  UPDATE "Post" SET title=%s, content=%s, published=%s WHERE id=%s  RETURNING * """,
@@ -69,6 +74,10 @@ def update_post(id: int, post: PostCreate,  db: Session = Depends(get_db), curre
     if not to_be_updated_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                              detail=f"post with the id of {id} not found")
+    
+    if to_be_updated_post.owner_id !=  current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                             detail="You have no authority here")
     
     # maps columns of the specific post in the database with data 
     # from our pydantic model 
