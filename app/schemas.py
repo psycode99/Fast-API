@@ -36,6 +36,14 @@ class Post(PostBase):
     class Config:
         from_attributes = True
 
+
+class PostVote(BaseModel):
+    Post: Post
+    votes: int
+
+    class Config:
+        from_attributes = True
+
 class Token(BaseModel):
     access_token : str
     token_type: str
