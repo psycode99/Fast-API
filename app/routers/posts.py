@@ -16,8 +16,9 @@ def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.
               limit: int = 10, skip: int = 0, search: Optional[str] = "" ):
     # cur.execute(""" SELECT * FROM "Post" """)
     # posts = cur.fetchall()
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    # posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
 
+    # SQLAlchemy join stmt
     result = db.query(models.Post, func.count(models.Vote.post_id).label('votes')).join(
         models.Vote, models.Vote.post_id==models.Post.id, isouter=True).group_by(
         models.Post.id).filter(models.Post.title.contains(search)).limit(
@@ -43,7 +44,7 @@ def create_posts(post: PostCreate, db: Session = Depends(get_db), current_user: 
 def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # cur.execute("""  SELECT * FROM "Post" WHERE id=%s """, vars=(str(id),))
     # post = cur.fetchone()
-    post = db.query(models.Post).filter_by(id=id).first()
+    # post = db.query(models.Post).filter_by(id=id).first()
     result = db.query(models.Post, func.count(models.Vote.post_id).label('votes')).join(
         models.Vote, models.Vote.post_id==models.Post.id, isouter=True).group_by(
         models.Post.id).filter(models.Post.id==id).first()
