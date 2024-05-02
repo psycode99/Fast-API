@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from . import models, config
 from .database import engine
+from fastapi.middleware.cors import CORSMiddleware
 from .routers import posts, user, auth, vote
 
 # models.Base.metadata.create_all(bind=engine)
@@ -9,6 +10,21 @@ from .routers import posts, user, auth, vote
 # so we don't want it to be creating the tables before alembic does its thing -- migrations
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
+async def main():
+    return {"message": "Hello World"}
 
 
 settings = config.Settings()
