@@ -24,7 +24,7 @@ app.add_middleware(
 
 @app.get("/")
 async def main():
-    return {"message": "Hello World"}
+    return {"message": "Hello World!!!"}
 
 
 settings = config.Settings()
@@ -34,9 +34,6 @@ app.include_router(user.router)
 app.include_router(auth.router)
 app.include_router(vote.router)
 
-@app.get('/')
-def root():
-    return {"message":"Hello to my API !"}
 
 
 

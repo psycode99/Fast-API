@@ -7,7 +7,7 @@ from .config import settings
 
 SQLACHEMY_DATABASE_URL = f'postgresql://{settings.database_username}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_name}'
 
-engine = create_engine(SQLACHEMY_DATABASE_URL)
+engine = create_engine(SQLACHEMY_DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 # sessionLocal serves as a factory for creating new sessions
