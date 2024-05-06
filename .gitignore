@@ -4,3 +4,4 @@ venv/
 app/__init__.py
 .env
 docker-compose-dev.yml
+.pytest_cache/
