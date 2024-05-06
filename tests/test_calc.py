@@ -1,4 +1,4 @@
-from app.calc import add, BankAccount
+from app.calc import add, BankAccount, InsufficientFunds
 import pytest
 
 @pytest.fixture
@@ -34,3 +34,15 @@ def test_bank_withdraw(class_instance):
 def test_bank_interest(class_instance):
     class_instance.collect_interest()
     assert round(class_instance.balance, 2) == 55
+
+
+@pytest.mark.parametrize("deposit, withdraw, balance", [(50, 50, 50), (100, 30, 120), (500, 300, 250)])
+def test_bank_transaction( class_instance, deposit, withdraw, balance):
+    class_instance.deposit(deposit)
+    class_instance.withdraw(withdraw)
+    assert class_instance.balance == balance
+
+
+def test_insufficient_funds(class_instance):
+    with pytest.raises(InsufficientFunds):
+        class_instance.withdraw(200)
