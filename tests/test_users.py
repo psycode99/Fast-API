@@ -1,18 +1,10 @@
 from app import schemas
-from .database import client, session
 import pytest
 from jose import jwt
 from app.oauth2 import SECRET_KEY, ALGORITHM
+from fastapi import HTTPException
 
-
-@pytest.fixture
-def test_user(client):
-    user_data = {"email":"meeka@gmail.com", "password":"1234"}
-    res = client.post('/users/', json=user_data)
-    assert res.status_code == 201
-    new_user = res.json()
-    new_user['password'] = user_data['password']
-    return new_user
+from tests.conftest import test_user
 
 
 def test_root(client):
@@ -36,3 +28,14 @@ def test_login(client, test_user):
     assert id == test_user['id']
     assert login_res.token_type == 'bearer'
     assert res.status_code == 200
+
+
+@pytest.mark.parametrize("email, password, status_code", [("meeka@gmail.com", "ddd", 403),
+                                                                  ("mike@gmail.com", "1234", 403),
+                                                                  ('mike@gmail.com',  "gggg", 403) ,
+                                                                  (None, "1234", 422),
+                                                                  ("meeka@gmail.com", None, 422)])
+def test_incorrect_login(client, test_user, email, password, status_code):
+    res = client.post('/login', data={"username":email, "password":password})
+    assert res.status_code == status_code
+    # assert res.json().get('detail') == detail
