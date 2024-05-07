@@ -30,11 +30,13 @@ def test_login(client, test_user):
     assert res.status_code == 200
 
 
-@pytest.mark.parametrize("email, password, status_code", [("meeka@gmail.com", "ddd", 403),
-                                                                  ("mike@gmail.com", "1234", 403),
-                                                                  ('mike@gmail.com',  "gggg", 403) ,
-                                                                  (None, "1234", 422),
-                                                                  ("meeka@gmail.com", None, 422)])
+@pytest.mark.parametrize("email, password, status_code", [
+    ("meeka@gmail.com", "ddd", 403),
+    ("mike@gmail.com", "1234", 403),
+    ('mike@gmail.com',  "gggg", 403) ,
+    (None, "1234", 422),
+    ("meeka@gmail.com", None, 422)
+    ])
 def test_incorrect_login(client, test_user, email, password, status_code):
     res = client.post('/login', data={"username":email, "password":password})
     assert res.status_code == status_code
