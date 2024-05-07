@@ -1,7 +1,8 @@
+import json
 from fastapi.testclient import TestClient
 import pytest
 from app.main import app
-from app import schemas
+from app import models, schemas
 from app.config import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -74,3 +75,39 @@ def authorized_client(client, token):
     }
 
     return client
+
+
+# @pytest.fixture
+# def create_test_posts(authorized_client):
+#     new_post = authorized_client.post('/posts/', json={"title": "Best Hyper Cars in Europe", "content": "Porshe, Rimac, Bugatti"})
+#     assert new_post.status_code == 201
+
+#     return new_post
+
+@pytest.fixture
+def test_posts(test_user, session):
+    post_data = [{
+        "title": "Best Dog Breeds",
+        "content": "huskies, Labradors and goldens",
+        "owner_id": test_user['id']
+    },
+    {
+        "title": "Best Cat Breeds",
+        "content": "dunno not a cat person",
+        "owner_id": test_user['id']
+    },
+    {
+        "title": "Best Hyper Cars in Europe",
+        "content": "Porshe, Rimac, Bugatti",
+        "owner_id": test_user['id']
+    }]
+
+    def create_post_model(post):
+        return models.Post(**post)
+    
+    post_map = map(create_post_model, post_data)
+
+    session.add_all(list(post_map))
+    session.commit()
+    posts = session.query(models.Post).all()
+    return posts
