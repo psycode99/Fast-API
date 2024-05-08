@@ -10,7 +10,7 @@ jobs:
     environment:
       name: testing
     env:
-      DATABASE_HOSTNAME: localhost
+      DATABASE_HOSTNAME: postgres
       DATABASE_PORT: 5432
       DATABASE_PASSWORD: wordpress
       DATABASE_USERNAME: postgres
