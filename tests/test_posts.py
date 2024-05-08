@@ -1,3 +1,4 @@
+import json
 import pytest
 from app import schemas
 
@@ -54,6 +55,25 @@ def test_unauthorized_create_post(client, test_user):
     res = client.post('/posts/', json=post_data)
     assert res.status_code == 401
 
+
+def test_unauthorized_user_del_post(client, test_posts):
+    res = client.delete(f'/posts/{test_posts[0].id}')
+    assert res.status_code == 401
+
+
+def test_delete_post(authorized_client, test_posts):
+    res = authorized_client.delete(f'/posts/{test_posts[0].id}')
+    assert res.status_code == 204
+
+
+def test_delete_invalid_post(authorized_client, test_posts):
+    res = authorized_client.delete(f'/posts/888')
+    assert res.status_code == 404
+
+
+def test_delete_other_user_post(authorized_client, test_posts):
+    res = authorized_client.delete(f"/posts/{test_posts[3].id}")
+    assert res.status_code == 403
 
     
     
