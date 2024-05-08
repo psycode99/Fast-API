@@ -7,7 +7,7 @@ services:
   
     # command: uvicorn app.main:app --host 0.0.0.0 --port 8080 
     environment:
-      - DATABASE_HOSTNAME=$i{DATABASE_HOSTNAME}  # Assuming PostgreSQL service name is "postgres"
+      - DATABASE_HOSTNAME=${DATABASE_HOSTNAME}  # Assuming PostgreSQL service name is "postgres"
       - DATABASE_PORT=${DATABASE_PORT}
       - DATABASE_PASSWORD=${DATABASE_PASSWORD}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
