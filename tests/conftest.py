@@ -20,9 +20,8 @@ TestSessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 @pytest.fixture(scope="function")
 def session():
     """
-    it deletes the previous tables when a new test is started
-    creates the new database tables before our code is run
-    and yields back a TestClient object
+    it deletes the previous tables when a new test is started.
+    It then creates the new database tables before our code is run
     
     """
     Base.metadata.drop_all(bind=engine)
@@ -126,3 +125,13 @@ def test_posts(test_user, test_user2, session):
     session.commit()
     posts = session.query(models.Post).all()
     return posts
+
+
+@pytest.fixture
+def vote_on_post(test_user, session, test_posts):
+    new_vote = models.Vote(
+        post_id=test_posts[3].id,
+        user_id=test_user['id']
+    )
+    session.add(new_vote)
+    session.commit()
